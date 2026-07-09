@@ -532,6 +532,193 @@ const swaggerDocument = {
       },
     },
     '/api/patients/{id}': {
+      '/api/appointments': {
+  post: {
+    summary: 'Create Appointment',
+    tags: ['Appointment Management'],
+    security: [{ BearerAuth: [] }],
+    requestBody: {
+      required: true,
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            required: [
+              'patient',
+              'doctor',
+              'appointmentDate'
+            ],
+            properties: {
+              patient: {
+                type: 'string',
+                example: '64ae76e89f592df04b212d3e'
+              },
+              doctor: {
+                type: 'string',
+                example: '64ae76e89f592df04b212d55'
+              },
+              appointmentDate: {
+                type: 'string',
+                format: 'date-time',
+                example: '2026-07-12T10:00:00.000Z'
+              },
+              reason: {
+                type: 'string',
+                example: 'Fever'
+              },
+              notes: {
+                type: 'string',
+                example: 'High fever'
+              }
+            }
+          }
+        }
+      }
+    },
+    responses: {
+      201: {
+        description: 'Appointment created successfully'
+      },
+      400: {
+        description: 'Validation Error'
+      },
+      401: {
+        description: 'Unauthorized'
+      }
+    }
+  },
+
+  get: {
+    summary: 'Get All Appointments',
+    tags: ['Appointment Management'],
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: 'Appointments fetched successfully'
+      }
+    }
+  }
+},
+
+'/api/appointments/{id}': {
+
+  get: {
+    summary: 'Get Appointment By ID',
+    tags: ['Appointment Management'],
+    security: [{ BearerAuth: [] }],
+    parameters: [
+      {
+        name: 'id',
+        in: 'path',
+        required: true,
+        schema: {
+          type: 'string'
+        }
+      }
+    ],
+    responses: {
+      200: {
+        description: 'Appointment found'
+      }
+    }
+  },
+
+  put: {
+    summary: 'Update Appointment',
+    tags: ['Appointment Management'],
+    security: [{ BearerAuth: [] }],
+    parameters: [
+      {
+        name: 'id',
+        in: 'path',
+        required: true,
+        schema: {
+          type: 'string'
+        }
+      }
+    ],
+    requestBody: {
+      required: true,
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object'
+          }
+        }
+      }
+    },
+    responses: {
+      200: {
+        description: 'Appointment updated'
+      }
+    }
+  },
+
+  delete: {
+    summary: 'Delete Appointment',
+    tags: ['Appointment Management'],
+    security: [{ BearerAuth: [] }],
+    parameters: [
+      {
+        name: 'id',
+        in: 'path',
+        required: true,
+        schema: {
+          type: 'string'
+        }
+      }
+    ],
+    responses: {
+      200: {
+        description: 'Appointment deleted'
+      }
+    }
+  }
+},
+
+'/api/appointments/{id}/status': {
+  patch: {
+    summary: 'Update Appointment Status',
+    tags: ['Appointment Management'],
+    security: [{ BearerAuth: [] }],
+    parameters: [
+      {
+        name: 'id',
+        in: 'path',
+        required: true,
+        schema: {
+          type: 'string'
+        }
+      }
+    ],
+    requestBody: {
+      required: true,
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              status: {
+                type: 'string',
+                enum: [
+                  'Scheduled',
+                  'Completed',
+                  'Cancelled'
+                ],
+                example: 'Completed'
+              }
+            }
+          }
+        }
+      }
+    },
+    responses: {
+      200: {
+        description: 'Status Updated'
+      }
+    }
+  }
+}
       get: {
         summary: 'Get Patient By ID',
         description: 'Retrieves patient details by database object ID. Accessible by Admin, Receptionist, and Doctor.',
