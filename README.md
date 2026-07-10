@@ -174,80 +174,39 @@ All patient APIs require `Bearer <token>` in the `Authorization` header.
 
 ## Appointment APIs
 
-All appointment APIs require `Bearer <token>` in the Authorization header.
+All appointment APIs require Bearer Token.
 
-### POST `/api/appointments`
-- Create Appointment
-
-### GET `/api/appointments`
-- Get All Appointments
-
-### GET `/api/appointments/:id`
-- Get Appointment By ID
-
-### PUT `/api/appointments/:id`
-- Update Appointment
-
-### DELETE `/api/appointments/:id`
-- Delete Appointment
-
-### PATCH `/api/appointments/:id/reschedule`
-- Reschedule Appointment
-
-### PATCH `/api/appointments/:id/status`
-- Update Appointment Status
-
-* **`POST /api/patients`**
-  - **Access:** Admin, Receptionist
-  - **Description:** Registers a new patient. Auto-generates standard unique `patientId` (e.g. `PAT-20260708-4829`) and auto-calculates patient `age` based on `dob`.
-  - **Body:** See Swagger schema or Postman payload examples.
-
-* **`GET /api/patients`**
-  - **Access:** Admin, Receptionist, Doctor
-  - **Description:** Get all patients.
-  - **Query Parameters (Optional):**
-    - `search`: Search query string matching `patientId`, `firstName`, `lastName`, `phone`, or `email`.
-    - `page`: Page index (default: `1`).
-    - `limit`: Patient records count per page (default: `10`).
-    - `sortBy`: Field to sort results (default: `createdAt`).
-    - `sortOrder`: Sort direction `asc` or `desc` (default: `desc`).
-
-* **`GET /api/patients/:id`**
-  - **Access:** Admin, Receptionist, Doctor
-  - **Description:** Retrieves full patient detail, medical history, allergies, and medications.
-
-* **`PUT /api/patients/:id`**
-  - **Access:** Admin, Receptionist
-  - **Description:** Updates patient fields. Recalculates age if `dob` is modified.
-
-* **`DELETE /api/patients/:id`**
-  - **Access:** Admin Only
-  - **Description:** Removes a patient record permanently.
-
----
+| Method | Endpoint | Description |
+|---------|----------|-------------|
+| POST | /api/appointments | Create Appointment |
+| GET | /api/appointments | Get All Appointments |
+| GET | /api/appointments/:id | Get Appointment By ID |
+| PUT | /api/appointments/:id | Update Appointment |
+| DELETE | /api/appointments/:id | Delete Appointment |
+| PATCH | /api/appointments/:id/reschedule | Reschedule Appointment |
+| PATCH | /api/appointments/:id/status | Update Appointment Status |
 
 ## Role-Based Access Control (RBAC) Rules
 
 The system enforces strict route authorization checks at the middleware level:
 
-| Endpoint | HTTP Method | Allowed Roles |
-| :--- | :--- | :--- |
-| `/api/auth/login` | POST | Public |
-| `/api/patients` | POST | Admin, Receptionist |
-| `/api/patients` | GET | Admin, Receptionist, Doctor |
-| `/api/patients/:id` | GET | Admin, Receptionist, Doctor |
-| `/api/patients/:id` | PUT | Admin, Receptionist |
-| `/api/patients/:id` | DELETE | Admin Only |
+| Endpoint | Method | Allowed Roles |
+|----------|--------|---------------|
+| /api/auth/login | POST | Public |
+| /api/patients | POST | Admin, Receptionist |
+| /api/patients | GET | Admin, Receptionist, Doctor |
+| /api/patients/:id | GET | Admin, Receptionist, Doctor |
+| /api/patients/:id | PUT | Admin, Receptionist |
+| /api/patients/:id | DELETE | Admin |
+| /api/appointments | POST | Admin, Receptionist |
+| /api/appointments | GET | Admin, Receptionist, Doctor |
+| /api/appointments/:id | GET | Admin, Receptionist, Doctor |
+| /api/appointments/:id | PUT | Admin, Receptionist |
+| /api/appointments/:id | DELETE | Admin |
+| /api/appointments/:id/reschedule | PATCH | Admin, Receptionist |
+| /api/appointments/:id/status | PATCH | Admin, Doctor |
 
 ---
-
-| `/api/appointments` | POST | Admin, Receptionist |
-| `/api/appointments` | GET | Admin, Receptionist, Doctor |
-| `/api/appointments/:id` | GET | Admin, Receptionist, Doctor |
-| `/api/appointments/:id` | PUT | Admin, Receptionist |
-| `/api/appointments/:id` | DELETE | Admin |
-| `/api/appointments/:id/reschedule` | PATCH | Admin, Receptionist |
-| `/api/appointments/:id/status` | PATCH | Admin, Doctor |
 
 ## Postman Collection Testing
 
