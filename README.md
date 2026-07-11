@@ -226,11 +226,11 @@ Use `/health` as Render's health check path. It responds with 200 OK:
 ```
 
 ---
->>>>>>> 716aada (Complete Phase 3: Billing, Analytics & Deployment)
+
+(Complete Phase 3: Billing, Analytics & Deployment)
 
 ## Postman Testing Sequence
 
-<<<<<<< HEAD
 The system enforces strict route authorization checks at the middleware level:
 
 | Endpoint | Method | Allowed Roles |
