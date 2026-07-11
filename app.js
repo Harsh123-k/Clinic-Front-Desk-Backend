@@ -45,3 +45,6 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 module.exports = app;
+// const swaggerUi = require('swagger-ui-express');
+// const swaggerDocument = require('./docs/swagger');
+// app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));

@@ -334,6 +334,122 @@ const swaggerDocument = {
           data: { $ref: '#/components/schemas/Appointment' },
         },
       },
+      InvoiceInput: {
+        type: 'object',
+        properties: {
+          additionalCharges: { type: 'number', example: 150 },
+          paymentStatus: { type: 'string', enum: ['Pending', 'Paid'], example: 'Pending' },
+          paymentMethod: { type: 'string', enum: ['Cash', 'UPI', 'Card'], example: 'UPI' },
+        },
+      },
+      PayInvoiceInput: {
+        type: 'object',
+        required: ['paymentMethod'],
+        properties: {
+          paymentMethod: { type: 'string', enum: ['Cash', 'UPI', 'Card'], example: 'UPI' },
+        },
+      },
+      Invoice: {
+        type: 'object',
+        properties: {
+          _id: { type: 'string', example: '64ae76e89f592df04b212e11' },
+          invoiceNumber: { type: 'string', example: 'INV-20260711-48293' },
+          appointment: { $ref: '#/components/schemas/Appointment' },
+          patient: { $ref: '#/components/schemas/Patient' },
+          doctor: { $ref: '#/components/schemas/Doctor' },
+          consultationCharge: { type: 'number', example: 500 },
+          additionalCharges: { type: 'number', example: 150 },
+          totalAmount: { type: 'number', example: 650 },
+          paymentStatus: { type: 'string', enum: ['Pending', 'Paid'], example: 'Pending' },
+          paymentMethod: { type: 'string', enum: ['Cash', 'UPI', 'Card'], example: 'UPI' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      InvoiceResponse: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean', example: true },
+          message: { type: 'string', example: 'Invoice generated successfully' },
+          data: { $ref: '#/components/schemas/Invoice' },
+        },
+      },
+      InvoiceListResponse: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean', example: true },
+          message: { type: 'string', example: 'Invoices retrieved successfully' },
+          data: {
+            type: 'array',
+            items: { $ref: '#/components/schemas/Invoice' },
+          },
+          pagination: {
+            type: 'object',
+            properties: {
+              total: { type: 'integer', example: 25 },
+              page: { type: 'integer', example: 1 },
+              limit: { type: 'integer', example: 10 },
+              pages: { type: 'integer', example: 3 },
+            },
+          },
+        },
+      },
+      AnalyticsAppointmentsResponse: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean', example: true },
+          message: { type: 'string', example: 'Appointment analytics retrieved successfully' },
+          data: {
+            type: 'object',
+            properties: {
+              total: { type: 'integer', example: 45 },
+              completed: { type: 'integer', example: 30 },
+              cancelled: { type: 'integer', example: 5 },
+              pending: { type: 'integer', example: 8 },
+              noShow: { type: 'integer', example: 2 },
+            },
+          },
+        },
+      },
+      AnalyticsPatientsResponse: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean', example: true },
+          message: { type: 'string', example: 'Patient analytics retrieved successfully' },
+          data: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                patientId: { type: 'string', example: 'PAT-20260708-4829' },
+                visitCount: { type: 'integer', example: 5 },
+                patient: { $ref: '#/components/schemas/Patient' },
+              },
+            },
+          },
+        },
+      },
+      AnalyticsDoctorsResponse: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean', example: true },
+          message: { type: 'string', example: 'Doctor analytics retrieved successfully' },
+          data: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                doctorId: { type: 'string', example: '64ae76e89f592df04b212d5a' },
+                appointmentCount: { type: 'integer', example: 15 },
+                completedCount: { type: 'integer', example: 10 },
+                pendingCount: { type: 'integer', example: 3 },
+                cancelledCount: { type: 'integer', example: 2 },
+                doctor: { $ref: '#/components/schemas/Doctor' },
+              },
+            },
+          },
+        },
+      },
       ErrorResponse: {
         type: 'object',
         properties: {
@@ -907,6 +1023,260 @@ const swaggerDocument = {
           401: { description: 'Unauthorized' },
           403: { description: "Forbidden (not this doctor's own appointment)" },
           404: { description: 'Appointment not found' },
+        },
+      },
+    },
+
+    '/api/doctors': {
+      post: {
+        summary: 'Register Doctor User & Profile',
+        description: 'Creates a Doctor user account and their Doctor Profile. Accessible by Admin only.',
+        tags: ['Doctor Management'],
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/DoctorInput' } } },
+        },
+        responses: {
+          201: {
+            description: 'Doctor registered successfully',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/DoctorResponse' } } },
+          },
+          400: { description: 'Validation failure or duplicate key error' },
+          401: { description: 'Unauthorized' },
+          403: { description: 'Forbidden (Admin only)' },
+        },
+      },
+      get: {
+        summary: 'Get All Doctor Profiles',
+        description: 'Retrieves all doctor profiles with optional search and pagination. Accessible by Admin, Receptionist, and Doctor.',
+        tags: ['Doctor Management'],
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          { name: 'search', in: 'query', description: 'Search by doctor name or specialization', required: false, schema: { type: 'string' } },
+          { name: 'specialization', in: 'query', description: 'Filter by specialization', required: false, schema: { type: 'string' } },
+          { name: 'page', in: 'query', description: 'Page number', required: false, schema: { type: 'integer', default: 1 } },
+          { name: 'limit', in: 'query', description: 'Items per page', required: false, schema: { type: 'integer', default: 10 } },
+        ],
+        responses: {
+          200: {
+            description: 'Doctors retrieved successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    message: { type: 'string', example: 'Doctors retrieved successfully' },
+                    data: { type: 'array', items: { $ref: '#/components/schemas/Doctor' } },
+                    pagination: {
+                      type: 'object',
+                      properties: {
+                        total: { type: 'integer', example: 10 },
+                        page: { type: 'integer', example: 1 },
+                        limit: { type: 'integer', example: 10 },
+                        pages: { type: 'integer', example: 1 },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          401: { description: 'Unauthorized' },
+        },
+      },
+    },
+
+    '/api/doctors/{id}': {
+      get: {
+        summary: 'Get Doctor Profile By ID',
+        description: 'Retrieves single doctor profile. Accessible by Admin, Receptionist, and Doctor.',
+        tags: ['Doctor Management'],
+        security: [{ BearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          200: {
+            description: 'Doctor found',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/DoctorResponse' } } },
+          },
+          401: { description: 'Unauthorized' },
+          404: { description: 'Doctor not found' },
+        },
+      },
+      put: {
+        summary: 'Update Doctor Profile',
+        description: 'Updates doctor profile details. Accessible by Admin, or the Doctor themselves modifying their own profile.',
+        tags: ['Doctor Management'],
+        security: [{ BearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/DoctorUpdateInput' } } },
+        },
+        responses: {
+          200: {
+            description: 'Doctor profile updated',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/DoctorResponse' } } },
+          },
+          401: { description: 'Unauthorized' },
+          403: { description: 'Forbidden (Not authorized to modify this profile)' },
+          404: { description: 'Doctor not found' },
+        },
+      },
+      delete: {
+        summary: 'Delete Doctor Profile',
+        description: 'Deletes doctor profile and their user account. Accessible by Admin only.',
+        tags: ['Doctor Management'],
+        security: [{ BearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          200: { description: 'Doctor profile and account deleted successfully' },
+          401: { description: 'Unauthorized' },
+          403: { description: 'Forbidden (Admin only)' },
+          404: { description: 'Doctor not found' },
+        },
+      },
+    },
+
+    '/api/billing': {
+      get: {
+        summary: 'Get All Invoices',
+        description: 'Retrieves all invoices with optional filtering and pagination. Accessible by Admin and Receptionist only.',
+        tags: ['Billing Management'],
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          { name: 'paymentStatus', in: 'query', description: 'Filter by payment status', required: false, schema: { type: 'string', enum: ['Pending', 'Paid'] } },
+          { name: 'patient', in: 'query', description: 'Filter by Patient Database ID', required: false, schema: { type: 'string' } },
+          { name: 'doctor', in: 'query', description: 'Filter by Doctor Database ID', required: false, schema: { type: 'string' } },
+          { name: 'page', in: 'query', description: 'Page number', required: false, schema: { type: 'integer', default: 1 } },
+          { name: 'limit', in: 'query', description: 'Items per page', required: false, schema: { type: 'integer', default: 10 } },
+        ],
+        responses: {
+          200: {
+            description: 'Invoices retrieved successfully',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/InvoiceListResponse' } } },
+          },
+          401: { description: 'Unauthorized' },
+          403: { description: 'Forbidden (Admin/Receptionist only)' },
+        },
+      },
+    },
+
+    '/api/billing/generate/{appointmentId}': {
+      post: {
+        summary: 'Generate Invoice From Appointment',
+        description: 'Automatically creates an invoice using the appointment information and consultation fee. Accessible by Admin and Receptionist.',
+        tags: ['Billing Management'],
+        security: [{ BearerAuth: [] }],
+        parameters: [{ name: 'appointmentId', in: 'path', required: true, schema: { type: 'string' } }],
+        requestBody: {
+          required: false,
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/InvoiceInput' } } },
+        },
+        responses: {
+          201: {
+            description: 'Invoice generated successfully',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/InvoiceResponse' } } },
+          },
+          400: { description: 'Validation failed or invoice already generated' },
+          401: { description: 'Unauthorized' },
+          403: { description: 'Forbidden' },
+          404: { description: 'Appointment or Doctor not found' },
+        },
+      },
+    },
+
+    '/api/billing/{invoiceId}': {
+      get: {
+        summary: 'Get Invoice Details By ID',
+        description: 'Retrieves single invoice details. Accessible by Admin and Receptionist.',
+        tags: ['Billing Management'],
+        security: [{ BearerAuth: [] }],
+        parameters: [{ name: 'invoiceId', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          200: {
+            description: 'Invoice found',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/InvoiceResponse' } } },
+          },
+          401: { description: 'Unauthorized' },
+          403: { description: 'Forbidden' },
+          404: { description: 'Invoice not found' },
+        },
+      },
+    },
+
+    '/api/billing/pay/{invoiceId}': {
+      put: {
+        summary: 'Mark Invoice As Paid',
+        description: 'Updates payment status to Paid and logs the payment method. Accessible by Admin and Receptionist.',
+        tags: ['Billing Management'],
+        security: [{ BearerAuth: [] }],
+        parameters: [{ name: 'invoiceId', in: 'path', required: true, schema: { type: 'string' } }],
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/PayInvoiceInput' } } },
+        },
+        responses: {
+          200: {
+            description: 'Invoice marked as Paid',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/InvoiceResponse' } } },
+          },
+          400: { description: 'Validation failure or invoice already paid' },
+          401: { description: 'Unauthorized' },
+          403: { description: 'Forbidden' },
+          404: { description: 'Invoice not found' },
+        },
+      },
+    },
+
+    '/api/analytics/appointments': {
+      get: {
+        summary: 'Get Appointment Analytics Breakdown',
+        description: 'Returns total, completed, pending, and cancelled appointment counts. Doctors are limited to their own counts.',
+        tags: ['Analytics'],
+        security: [{ BearerAuth: [] }],
+        responses: {
+          200: {
+            description: 'Appointment analytics retrieved successfully',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/AnalyticsAppointmentsResponse' } } },
+          },
+          401: { description: 'Unauthorized' },
+          404: { description: 'Doctor profile not found' },
+        },
+      },
+    },
+
+    '/api/analytics/patients': {
+      get: {
+        summary: 'Get Top Patients Analytics',
+        description: 'Returns top visiting patients and visit counts. Doctors are limited to their own patients.',
+        tags: ['Analytics'],
+        security: [{ BearerAuth: [] }],
+        responses: {
+          200: {
+            description: 'Patient analytics retrieved successfully',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/AnalyticsPatientsResponse' } } },
+          },
+          401: { description: 'Unauthorized' },
+          404: { description: 'Doctor profile not found' },
+        },
+      },
+    },
+
+    '/api/analytics/doctors': {
+      get: {
+        summary: 'Get Doctor Activity Analytics',
+        description: 'Returns appointment count and status breakdowns per doctor. Doctors are limited to their own summary.',
+        tags: ['Analytics'],
+        security: [{ BearerAuth: [] }],
+        responses: {
+          200: {
+            description: 'Doctor analytics retrieved successfully',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/AnalyticsDoctorsResponse' } } },
+          },
+          401: { description: 'Unauthorized' },
+          404: { description: 'Doctor profile not found' },
         },
       },
     },

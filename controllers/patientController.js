@@ -1,4 +1,6 @@
 const patientService = require('../services/patientService');
+const Doctor = require('../models/Doctor');
+const Appointment = require('../models/Appointment');
 
 /**
  * @desc    Create a new patient
@@ -25,7 +27,23 @@ const createPatient = async (req, res, next) => {
  */
 const getAllPatients = async (req, res, next) => {
   try {
-    const result = await patientService.getAllPatients(req.query);
+    const queryParams = { ...req.query };
+
+    // If logged-in user is a Doctor, restrict to their own patients
+    if (req.user.role === 'Doctor') {
+      const doctorProfile = await Doctor.findOne({ user: req.user._id });
+      if (!doctorProfile) {
+        return res.status(404).json({
+          success: false,
+          message: 'Doctor profile not found',
+        });
+      }
+      // Get IDs of patients who have appointments with this doctor
+      const patientIds = await Appointment.find({ doctor: doctorProfile._id }).distinct('patient');
+      queryParams.allowedPatientIds = patientIds.map((id) => id.toString());
+    }
+
+    const result = await patientService.getAllPatients(queryParams);
     res.status(200).json({
       success: true,
       message: 'Patients retrieved successfully',
@@ -44,6 +62,28 @@ const getAllPatients = async (req, res, next) => {
  */
 const getPatientById = async (req, res, next) => {
   try {
+    // If logged-in user is a Doctor, restrict access to their own patients
+    if (req.user.role === 'Doctor') {
+      const doctorProfile = await Doctor.findOne({ user: req.user._id });
+      if (!doctorProfile) {
+        return res.status(404).json({
+          success: false,
+          message: 'Doctor profile not found',
+        });
+      }
+      // Check for any appointment between this doctor and the patient
+      const appointmentExists = await Appointment.findOne({
+        doctor: doctorProfile._id,
+        patient: req.params.id,
+      });
+      if (!appointmentExists) {
+        return res.status(403).json({
+          success: false,
+          message: 'Not authorized to access this patient (no appointment history)',
+        });
+      }
+    }
+
     const patient = await patientService.getPatientById(req.params.id);
     res.status(200).json({
       success: true,

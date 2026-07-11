@@ -40,24 +40,82 @@ const createAppointment = async (appointmentData) => {
 /**
  * Get all appointments
  */
-const getAllAppointments = async () => {
+const getAllAppointments = async (queryParams) => {
+    const {
+        status,
+        doctor,
+        patient,
+        date,
+        page = 1,
+        limit = 10,
+    } = queryParams || {};
 
-    const appointments = await Appointment.find()
-        .populate("patient")
-        .populate("doctor")
-        .sort({ appointmentDate: 1 });
+    const filter = {};
 
-    return appointments;
+    if (status) {
+        filter.status = status;
+    }
+    if (doctor) {
+        filter.doctor = doctor;
+    }
+    if (patient) {
+        filter.patient = patient;
+    }
+    if (date) {
+        const startOfDay = new Date(date);
+        startOfDay.setUTCHours(0, 0, 0, 0);
+        const endOfDay = new Date(date);
+        endOfDay.setUTCHours(23, 59, 59, 999);
+        filter.appointmentDate = {
+            $gte: startOfDay,
+            $lte: endOfDay,
+        };
+    }
+
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skipNum = (pageNum - 1) * limitNum;
+
+    const [total, appointments] = await Promise.all([
+        Appointment.countDocuments(filter),
+        Appointment.find(filter)
+            .populate("patient")
+            .populate({
+                path: "doctor",
+                populate: {
+                    path: "user",
+                    select: "fullName email phone",
+                },
+            })
+            .sort({ appointmentDate: 1 })
+            .skip(skipNum)
+            .limit(limitNum),
+    ]);
+
+    return {
+        appointments,
+        pagination: {
+            total,
+            page: pageNum,
+            limit: limitNum,
+            pages: Math.ceil(total / limitNum),
+        },
+    };
 };
 
 /**
  * Get appointment by ID
  */
 const getAppointmentById = async (id) => {
-
     const appointment = await Appointment.findById(id)
         .populate("patient")
-        .populate("doctor");
+        .populate({
+            path: "doctor",
+            populate: {
+                path: "user",
+                select: "fullName email phone",
+            },
+        });
 
     if (!appointment) {
         throw new Error("Appointment not found");

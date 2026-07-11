@@ -27,6 +27,30 @@ const doctorSchema = new mongoose.Schema(
       required: [true, 'Consultation fee is required'],
       min: [0, 'Consultation fee cannot be negative'],
     },
+    availableDays: {
+  type: [String],
+  default: [],
+},
+
+startTime: {
+  type: String,
+  default: "09:00",
+},
+
+endTime: {
+  type: String,
+  default: "17:00",
+},
+
+slotDuration: {
+  type: Number,
+  default: 30,
+},
+
+isAvailable: {
+  type: Boolean,
+  default: true,
+},
     bio: {
       type: String,
       trim: true,

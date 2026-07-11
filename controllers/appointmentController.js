@@ -1,4 +1,5 @@
 const appointmentService = require("../services/appointmentService");
+const Doctor = require("../models/Doctor");
 
 /**
  * Create Appointment
@@ -22,11 +23,27 @@ const createAppointment = async (req, res, next) => {
  */
 const getAllAppointments = async (req, res, next) => {
     try {
-        const appointments = await appointmentService.getAllAppointments();
+        const queryParams = { ...req.query };
+
+        // If logged-in user is a Doctor, restrict to their own appointments
+        if (req.user.role === 'Doctor') {
+            const doctorProfile = await Doctor.findOne({ user: req.user._id });
+            if (!doctorProfile) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Doctor profile not found",
+                });
+            }
+            queryParams.doctor = doctorProfile._id.toString();
+        }
+
+        const result = await appointmentService.getAllAppointments(queryParams);
 
         res.status(200).json({
             success: true,
-            data: appointments,
+            message: "Appointments retrieved successfully",
+            data: result.appointments,
+            pagination: result.pagination,
         });
     } catch (error) {
         next(error);
@@ -40,11 +57,26 @@ const getAppointmentById = async (req, res, next) => {
     try {
         const appointment = await appointmentService.getAppointmentById(req.params.id);
 
+        // If logged-in user is a Doctor, verify it is their own appointment
+        if (req.user.role === 'Doctor') {
+            const doctorProfile = await Doctor.findOne({ user: req.user._id });
+            if (!doctorProfile || appointment.doctor._id.toString() !== doctorProfile._id.toString()) {
+                return res.status(403).json({
+                    success: false,
+                    message: "Not authorized to access this appointment",
+                });
+            }
+        }
+
         res.status(200).json({
             success: true,
+            message: "Appointment found successfully",
             data: appointment,
         });
     } catch (error) {
+        if (error.message === 'Appointment not found') {
+            res.status(404);
+        }
         next(error);
     }
 };
@@ -90,7 +122,20 @@ const deleteAppointment = async (req, res, next) => {
  */
 const updateAppointmentStatus = async (req, res, next) => {
     try {
-        const appointment = await appointmentService.updateAppointmentStatus(
+        const appointment = await appointmentService.getAppointmentById(req.params.id);
+
+        // If logged-in user is a Doctor, verify it is their own appointment
+        if (req.user.role === 'Doctor') {
+            const doctorProfile = await Doctor.findOne({ user: req.user._id });
+            if (!doctorProfile || appointment.doctor._id.toString() !== doctorProfile._id.toString()) {
+                return res.status(403).json({
+                    success: false,
+                    message: "Not authorized to update status for this appointment",
+                });
+            }
+        }
+
+        const updatedAppointment = await appointmentService.updateAppointmentStatus(
             req.params.id,
             req.body.status
         );
@@ -98,9 +143,12 @@ const updateAppointmentStatus = async (req, res, next) => {
         res.status(200).json({
             success: true,
             message: "Appointment status updated successfully",
-            data: appointment,
+            data: updatedAppointment,
         });
     } catch (error) {
+        if (error.message === 'Appointment not found') {
+            res.status(404);
+        }
         next(error);
     }
 };

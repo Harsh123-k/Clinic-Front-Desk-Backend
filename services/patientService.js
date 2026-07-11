@@ -22,9 +22,14 @@ const getAllPatients = async (queryParams) => {
     limit = 10,
     sortBy = 'createdAt',
     sortOrder = 'desc',
+    allowedPatientIds,
   } = queryParams;
 
   const filter = {};
+
+  if (allowedPatientIds) {
+    filter._id = { $in: allowedPatientIds };
+  }
 
   // If search query is provided
   if (search) {
