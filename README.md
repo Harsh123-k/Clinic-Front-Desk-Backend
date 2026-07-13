@@ -1,10 +1,14 @@
 # Clinic Front Desk Management System Backend
 
-A complete, production-ready REST API backend for the **Clinic Front Desk Management System**, built using Node.js, Express, and MongoDB.
+## 🚀 Live Deployment
 
-This project implements Phase 1, Phase 2, and Phase 3 of the system, supporting patient management, doctor profiles, scheduling, billing workflows, and clinic statistics.
+- **GitHub Repository:** https://github.com/Harsh123-k/Clinic-Front-Desk-Backend
+- **Base API:** https://clinic-front-desk-backend-1.onrender.com
+- **Swagger API Documentation:** https://clinic-front-desk-backend-1.onrender.com/api-docs
 
 ---
+
+A complete, production-ready REST API backend...
 
 ## Tech Stack
 
